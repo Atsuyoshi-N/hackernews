@@ -1,6 +1,7 @@
 import React from 'react';
 import Button from './Button';
 import {sortBy} from 'lodash';
+import classNames from 'classnames';
 
 const SORTS = {
   NONE: list => list,
@@ -11,12 +12,11 @@ const SORTS = {
 };
 
 const Sort = ({sortKey, activeSortKey, onSort, children}) => {
-  const sortClass = ['button-inline'];
-  if (sortKey === activeSortKey) {
-    sortClass.push('button-active');
-  }
+  const sortClass = classNames('button-inline', {
+    'button-active': activeSortKey === sortKey,
+  });
   return (
-    <Button onClick={() => onSort(sortKey)} className={sortClass.join(' ')}>
+    <Button onClick={() => onSort(sortKey)} className={sortClass}>
       {children}
     </Button>
   );
