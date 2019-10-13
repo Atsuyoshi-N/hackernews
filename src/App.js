@@ -3,15 +3,21 @@ import axios from 'axios';
 import Table from './Table';
 import Button from './Button';
 import './App.css';
+import {
+  DEFAULT_QUERY,
+  DEFAULT_HPP,
+  PATH_BASE,
+  PATH_SEARCH,
+  PARAM_SEARCH,
+  PATH_PAGE,
+  PARAM_HPP,
+} from './constants/index.js';
 
-const DEFAULT_QUERY = 'redux';
-const DEFAULT_HPP = '100';
+const Loading = () => <div>Loading...</div>;
+const withLoading = Component => ({isLoading, ...rest}) =>
+  isLoading ? <Loading /> : <Component {...rest} />;
 
-const PATH_BASE = 'https://hn.algolia.com/api/v1';
-const PATH_SEARCH = '/search';
-const PARAM_SEARCH = 'query=';
-const PATH_PAGE = 'page=';
-const PARAM_HPP = 'hitsPerPage=';
+const ButtonWithLoading = withLoading(Button);
 
 class App extends React.Component {
   constructor(props) {
@@ -22,6 +28,7 @@ class App extends React.Component {
       searchKey: '',
       searchTerm: DEFAULT_QUERY,
       error: null,
+      isLoading: false,
     };
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
@@ -45,6 +52,7 @@ class App extends React.Component {
     const updatedHits = [...oldHits, ...hits];
     this.setState({
       results: {...results, [searchKey]: {hits: updatedHits, page}},
+      isLoading: false,
     });
   }
 
@@ -65,6 +73,7 @@ class App extends React.Component {
   }
 
   fetchSearchTopStories(searchTerm, page = 0) {
+    this.setState({isLoading: true});
     axios(
       `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PATH_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`,
     )
@@ -86,7 +95,7 @@ class App extends React.Component {
   }
 
   render() {
-    const {searchTerm, results, searchKey, error} = this.state;
+    const {searchTerm, results, searchKey, error, isLoading} = this.state;
     const page =
       (results && results[searchKey] && results[searchKey].page) || 0;
     const list =
@@ -110,10 +119,11 @@ class App extends React.Component {
           <Table list={list} onDismiss={this.onDismiss} />
         )}
         <div className="interactions">
-          <Button
+          <ButtonWithLoading
+            isLoading={isLoading}
             onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
             More
-          </Button>
+          </ButtonWithLoading>
         </div>
       </div>
     );
@@ -122,9 +132,25 @@ class App extends React.Component {
 
 export default App;
 
-const Search = ({value, onChange, onSubmit, children}) => (
-  <form onSubmit={onSubmit}>
-    <input type="text" value={value} onChange={onChange} />
-    <button type="submit">{children}</button>
-  </form>
-);
+class Search extends React.Component {
+  componentDidMount() {
+    if (this.input) {
+      this.input.focus();
+    }
+  }
+  render() {
+    const {value, onChange, onSubmit, children} = this.props;
+
+    return (
+      <form onSubmit={onSubmit}>
+        <input
+          type="text"
+          value={value}
+          onChange={onChange}
+          ref={el => (this.input = el)}
+        />
+        <button type="submit">{children}</button>
+      </form>
+    );
+  }
+}
