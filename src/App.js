@@ -29,6 +29,8 @@ class App extends React.Component {
       searchTerm: DEFAULT_QUERY,
       error: null,
       isLoading: false,
+      sortKey: 'NONE',
+      isSortReverse: false,
     };
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this);
@@ -36,6 +38,7 @@ class App extends React.Component {
     this.onSearchChange = this.onSearchChange.bind(this);
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
+    this.onSort = this.onSort.bind(this);
   }
 
   needsToSearchTopStories(searchTerm) {
@@ -94,8 +97,22 @@ class App extends React.Component {
     event.preventDefault();
   }
 
+  onSort(sortKey) {
+    const isSortReverse =
+      this.state.sortKey === sortKey && !this.state.isSortReverse;
+    this.setState({sortKey, isSortReverse});
+  }
+
   render() {
-    const {searchTerm, results, searchKey, error, isLoading} = this.state;
+    const {
+      searchTerm,
+      results,
+      searchKey,
+      error,
+      isLoading,
+      sortKey,
+      isSortReverse,
+    } = this.state;
     const page =
       (results && results[searchKey] && results[searchKey].page) || 0;
     const list =
@@ -116,7 +133,13 @@ class App extends React.Component {
             <p>Something went wrong.</p>
           </div>
         ) : (
-          <Table list={list} onDismiss={this.onDismiss} />
+          <Table
+            list={list}
+            sortKey={sortKey}
+            isSortReverse={isSortReverse}
+            onSort={this.onSort}
+            onDismiss={this.onDismiss}
+          />
         )}
         <div className="interactions">
           <ButtonWithLoading
